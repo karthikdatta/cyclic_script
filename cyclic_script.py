@@ -29,18 +29,25 @@ def get_current_candle_oshort(data, short_cycle_length, medium_cycle_length, sho
 
     omed = (scmm-mcb)/(mct-mcb)
     oshort = (data["Close"]-mcb)/(mct-mcb)
-    return oshort[-1]
+    return oshort[-2]
 
 
-# Fetch the data from yfinace
-ticker = yf.Ticker("^NSEBANK")
-data = ticker.history(interval="5m")
+def fetch_signal():
+    # Fetch the data from yfinace
+    ticker = yf.Ticker("^NSEBANK")
+    data = ticker.history(interval="5m")
 
-short_cycle_lenght = 20
-medium_cycle_lenght = 50
-short_cycle_multiplier = 1.0
-medium_cycle_multipler = 3.0
+    short_cycle_lenght = 20
+    medium_cycle_lenght = 50
+    short_cycle_multiplier = 1.0
+    medium_cycle_multipler = 3.0
 
-oshort = get_current_candle_oshort(
-    data, short_cycle_lenght, medium_cycle_lenght, short_cycle_multiplier, medium_cycle_multipler)
+    oshort = get_current_candle_oshort(
+        data, short_cycle_lenght, medium_cycle_lenght, short_cycle_multiplier, medium_cycle_multipler)
 
+    if(oshort > 1.0):
+        return "BUY"
+    elif(oshort < 0.0):
+        return "SHORT"
+    else:
+        return None
