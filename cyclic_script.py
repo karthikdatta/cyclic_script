@@ -34,17 +34,17 @@ def get_current_candle_oshort(data, short_cycle_length, medium_cycle_length, sho
 
     omed = (scmm-mcb)/(mct-mcb)
     oshort = (data["Close"]-mcb)/(mct-mcb)
-    return oshort[-2]
+    return oshort
 
 
 def fetch_signals():
     tickers_list = os.environ.get('TICKERS').split(',')
+    current_iteration = os.environ.get('ITERATION')
     signal_data = {}
     for ticker in tickers_list:
-
         # Fetch the data from yfinace
-        ticker = yf.Ticker(ticker)
-        data = ticker.history(interval="5m")
+        yticker = yf.Ticker(ticker)
+        data = yticker.history(interval="5m")
 
         short_cycle_lenght = 20
         medium_cycle_lenght = 50
@@ -53,9 +53,17 @@ def fetch_signals():
 
         oshort = get_current_candle_oshort(
             data, short_cycle_lenght, medium_cycle_lenght, short_cycle_multiplier, medium_cycle_multipler)
-
-        if(oshort > 1.0):
-            signal_data.update({ticker.info['shortName'] : "LONG"})
-        elif(oshort < 0.0):
-            signal_data.update({ticker.info['shortName'] : "SHORT"})
+        
+        if int(current_iteration) == 1:
+            if(oshort[-2] > 1.0):
+                signal_data.update({ticker : "LONG"})
+            elif(oshort[-2] < 0.0):
+                signal_data.update({ticker : "SHORT"})
+        else:
+            if(oshort[-2] > 1.0 and oshort[-3] < 1.0 ):
+                signal_data.update({ticker : "LONG"})
+            elif(oshort[-2] < 0.0 and oshort[-3] > 0.0):
+                signal_data.update({ticker : "SHORT"})
+    
+    os.environ['ITERATION'] = str(int(current_iteration) + 1)
     return signal_data
