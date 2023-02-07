@@ -1,6 +1,11 @@
 import yfinance as yf
 import pandas_ta as pd_ta
 import talib
+from dotenv import load_dotenv
+import os
+
+# Load the .env file
+load_dotenv('.env')
 
 
 def get_current_candle_oshort(data, short_cycle_length, medium_cycle_length, short_cycle_multiplier, medium_cycle_multiplier):
@@ -32,22 +37,25 @@ def get_current_candle_oshort(data, short_cycle_length, medium_cycle_length, sho
     return oshort[-2]
 
 
-def fetch_signal():
-    # Fetch the data from yfinace
-    ticker = yf.Ticker("^NSEBANK")
-    data = ticker.history(interval="5m")
+def fetch_signals():
+    tickers_list = os.environ.get('TICKERS').split(',')
+    signal_data = {}
+    for ticker in tickers_list:
 
-    short_cycle_lenght = 20
-    medium_cycle_lenght = 50
-    short_cycle_multiplier = 1.0
-    medium_cycle_multipler = 3.0
+        # Fetch the data from yfinace
+        ticker = yf.Ticker(ticker)
+        data = ticker.history(interval="5m")
 
-    oshort = get_current_candle_oshort(
-        data, short_cycle_lenght, medium_cycle_lenght, short_cycle_multiplier, medium_cycle_multipler)
+        short_cycle_lenght = 20
+        medium_cycle_lenght = 50
+        short_cycle_multiplier = 1.0
+        medium_cycle_multipler = 3.0
 
-    if(oshort > 1.0):
-        return "BUY"
-    elif(oshort < 0.0):
-        return "SHORT"
-    else:
-        return None
+        oshort = get_current_candle_oshort(
+            data, short_cycle_lenght, medium_cycle_lenght, short_cycle_multiplier, medium_cycle_multipler)
+
+        if(oshort > 1.0):
+            signal_data.update({ticker.info['shortName'] : "LONG"})
+        elif(oshort < 0.0):
+            signal_data.update({ticker.info['shortName'] : "SHORT"})
+    return signal_data

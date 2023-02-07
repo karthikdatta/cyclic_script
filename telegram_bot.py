@@ -2,7 +2,7 @@ from telegram import Bot
 import asyncio
 from dotenv import load_dotenv
 import os
-from cyclic_script import fetch_signal
+from cyclic_script import fetch_signals
 
 # Load the .env file
 load_dotenv('.env')
@@ -12,11 +12,10 @@ CHAT_ID = os.environ.get("CHAT_ID")
 
 
 async def send_signal(bot):
-    signal = fetch_signal()
-    if not signal:
-        await bot.send_message(chat_id=CHAT_ID,text="No signal found")
-    else:
-        await bot.send_message(chat_id=CHAT_ID,text=signal)
+    signals_dict = fetch_signals()
+    if signals_dict:
+        for key in signals_dict.keys():
+            await bot.send_message(chat_id=CHAT_ID,text="{} - {}".format(key,signals_dict.get(key)))
 
 
 if __name__ == '__main__':
