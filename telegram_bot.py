@@ -16,6 +16,7 @@ async def send_signal(bot):
     if signals_dict:
         for key in signals_dict.keys():
             await bot.send_message(chat_id=CHAT_ID,text="{} - {}".format(key,signals_dict.get(key)))
+        await bot.send_message(chat_id=CHAT_ID,text="---------------------------------------")
 
 
 if __name__ == '__main__':
