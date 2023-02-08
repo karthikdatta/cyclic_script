@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from cyclic_script import fetch_signals
 import time
+import datetime
 
 # Load the .env file
 load_dotenv('.env')
@@ -18,10 +19,23 @@ async def send_signal(signals_dict):
         for key in signals_dict.keys():
             await bot.send_message(chat_id=CHAT_ID,text="{} - {}".format(key,signals_dict.get(key)))
         await bot.send_message(chat_id=CHAT_ID,text="---------------------------------------")
-    
+
+def is_time():
+    now = datetime.datetime.now()
+    if now.hour == 9 and now.minute >= 20:
+        return True
+    elif now.hour > 9 and now.hour < 15:
+        return True
+    elif now.hour == 15 and now.minute <=15:
+        return True
+    else:
+        return False 
 
 while True:
-    signals_dict = fetch_signals()
-    asyncio.run(send_signal(signals_dict))
-    time.sleep(300)
+    if is_time():
+        signals_dict = fetch_signals()
+        asyncio.run(send_signal(signals_dict))
+        time.sleep(300)
+    else:
+        time.sleep(10)
     
