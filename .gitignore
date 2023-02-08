@@ -1,2 +1,4 @@
 .vscode/settings.json
 .env
+__pycache__/
+__pycache__/cyclic_script.cpython-310.pyc
