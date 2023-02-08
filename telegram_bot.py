@@ -36,7 +36,9 @@ def is_time():
 def get_sleep_time():
     now = datetime.datetime.now()
     next_5th_minute = (now.minute - now.minute % 5 + 5) % 60
-    sleep_time = (60 - now.second) + (next_5th_minute - now.minute - 1) * 60
+    sleep_time = (60 - now.second) + (next_5th_minute - now.minute) * 60
+    if sleep_time < 0:
+        sleep_time += 60 * 60
     return sleep_time
 
 
