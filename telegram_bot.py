@@ -33,10 +33,17 @@ def is_time():
         return False
 
 
+def get_sleep_time():
+    now = datetime.datetime.now()
+    next_5th_minute = (now.minute - now.minute % 5 + 5) % 60
+    sleep_time = (60 - now.second) + (next_5th_minute - now.minute - 1) * 60
+    return sleep_time
+
+
 while True:
     if is_time():
         signals_dict = fetch_signals()
         asyncio.run(send_signal(signals_dict))
-        time.sleep(300)
+        time.sleep(get_sleep_time() + 5)
     else:
         time.sleep(10)
