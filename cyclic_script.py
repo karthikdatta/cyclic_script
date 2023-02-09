@@ -34,11 +34,14 @@ def get_current_candle_oshort(data, short_cycle_length, medium_cycle_length, sho
 
     omed = (scmm-mcb)/(mct-mcb)
     oshort = (data["Close"]-mcb)/(mct-mcb)
-    return oshort
+    return oshort, omed
 
 
-def fetch_signals():
-    tickers_list = os.environ.get('TICKERS').split(',')
+def fetch_signals(trigger_type):
+    if trigger_type == "type1":
+        tickers_list = os.environ.get('TICKERS').split(',')
+    else:
+        tickers_list = os.environ.get('INDEX_TICKERS').split(',')
     current_iteration = os.environ.get('ITERATION')
     signal_data = {}
     for ticker in tickers_list:
@@ -51,19 +54,30 @@ def fetch_signals():
         short_cycle_multiplier = 1.0
         medium_cycle_multipler = 3.0
 
-        oshort = get_current_candle_oshort(
+        oshort, omed = get_current_candle_oshort(
             data, short_cycle_lenght, medium_cycle_lenght, short_cycle_multiplier, medium_cycle_multipler)
-        
-        if int(current_iteration) == 1:
-            if(oshort[-2] > 1.0):
-                signal_data.update({ticker : "LONG"})
-            elif(oshort[-2] < 0.0):
-                signal_data.update({ticker : "SHORT"})
+
+        if trigger_type == "type1":
+            if int(current_iteration) == 1:
+                if(oshort[-2] > 1.0):
+                    signal_data.update({ticker : "LONG"})
+                elif(oshort[-2] < 0.0):
+                    signal_data.update({ticker : "SHORT"})
+            else:
+                if(oshort[-2] > 1.0 and oshort[-3] < 1.0 ):
+                    signal_data.update({ticker : "LONG"})
+                elif(oshort[-2] < 0.0 and oshort[-3] > 0.0):
+                    signal_data.update({ticker : "SHORT"})
         else:
-            if(oshort[-2] > 1.0 and oshort[-3] < 1.0 ):
-                signal_data.update({ticker : "LONG"})
-            elif(oshort[-2] < 0.0 and oshort[-3] > 0.0):
-                signal_data.update({ticker : "SHORT"})
+            if int(current_iteration) == 1:
+                if(oshort[-2] > omed[-2]):
+                    signal_data.update({ticker : "LONG"})
+                elif(oshort[-2] < omed[-2]):
+                    signal_data.update({ticker : "SHORT"})
+            else:
+                if(oshort[-2] > omed[-2] and oshort[-3] < omed[-3] ):
+                    signal_data.update({ticker : "LONG"})
+                elif(oshort[-2] < omed[-2] and oshort[-3] > omed[-3]):
+                    signal_data.update({ticker : "SHORT"})
     
-    os.environ['ITERATION'] = str(int(current_iteration) + 1)
     return signal_data
