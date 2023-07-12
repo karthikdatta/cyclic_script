@@ -5,6 +5,8 @@ import os
 from cyclic_script import fetch_signals
 import time
 import datetime
+from py5paisa import FivePaisaClient
+import pyotp
 
 # Load the .env file
 load_dotenv('.env')
@@ -12,6 +14,18 @@ load_dotenv('.env')
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 CYCLIC_CHAT_ID = os.environ.get("CYCLIC_CHAT_ID")
 CROSSOVER_CHAT_ID = os.environ.get("CROSSOVER_CHAT_ID")
+
+cred = {
+    "APP_NAME": os.environ.get('APP_NAME'),
+    "APP_SOURCE": os.environ.get('APP_SOURCE'),
+    "USER_ID": os.environ.get('USER_ID'),
+    "PASSWORD": os.environ.get('PASSWORD'),
+    "USER_KEY": os.environ.get('USER_KEY'),
+    "ENCRYPTION_KEY": os.environ.get('ENCRYPTION_KEY')
+}
+
+client = FivePaisaClient(cred=cred)
+TOPT_SECRET = os.environ.get('TOPT_SECRET')
 
 async def send_cyclic_signal(cyclic_signals_dict):
     bot = Bot(token=TOKEN)
@@ -48,14 +62,20 @@ def get_sleep_time():
     return sleep_time
 
 
-while True:
-    if is_time():
-        current_iteration = os.environ.get('ITERATION')
-        cyclic_signals_dict = fetch_signals('type1')
-        asyncio.run(send_cyclic_signal(cyclic_signals_dict))
-        crossover_signals_dict = fetch_signals('type2')
-        asyncio.run(send_crossover_signal(crossover_signals_dict))
-        os.environ['ITERATION'] = str(int(current_iteration) + 1)
-        time.sleep(get_sleep_time() + 5)
-    else:
-        time.sleep(10)
+async def main_loop():
+    while True:
+        if is_time():
+            totp = pyotp.TOTP(TOPT_SECRET).now()
+            client.get_totp_session('50777942',totp,'153215')
+            current_iteration = os.environ.get('ITERATION')
+            cyclic_signals_dict = fetch_signals('type1',client)
+            await send_cyclic_signal(cyclic_signals_dict)
+            crossover_signals_dict = fetch_signals('type2',client)
+            await send_crossover_signal(crossover_signals_dict)
+            os.environ['ITERATION'] = str(int(current_iteration) + 1)
+            await asyncio.sleep(get_sleep_time() + 5)
+        else:
+            await asyncio.sleep(10)
+
+if __name__ == '__main__':
+    asyncio.run(main_loop())
